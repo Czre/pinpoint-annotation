@@ -68,12 +68,15 @@ public class IdValidator {
         return value;
     }
 
-
+    // Java -D<名称>=<值> 命令 设置系统属性 通常是需要在需要放agent的地方输入三行语句
     public String getApplicationName() {
+        // CATALINA_OPTS=$CATALINA_OPTS -Dpinpoint.applicationName=MyTestPP
         return this.getValidId("pinpoint.applicationName", MAX_ID_LENGTH);
     }
 
     public String getAgentId() {
+        // CATALINA_OPTS=$CATALINA_OPTS -Dpinpoint.agentId=pp20161122
+        // 而-Dpinpoint.agentId就在这个时候获取到了
         return this.getValidId("pinpoint.agentId", MAX_ID_LENGTH);
     }
 }

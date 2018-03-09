@@ -81,6 +81,7 @@ class PinpointStarter {
     }
 
     boolean start() {
+        // 调用System.getProperties()方法来获取系统信息
         final IdValidator idValidator = new IdValidator();
         final String agentId = idValidator.getAgentId();
         if (agentId == null) {
@@ -91,26 +92,35 @@ class PinpointStarter {
             return false;
         }
 
+        // 这一步是做什么呢?
+        // 将pinpoint-agent/plugin中的所有jar包转换为URL地址
         URL[] pluginJars = classPathResolver.resolvePlugins();
 
         // TODO using PLogger instead of CommonLogger
+        // 使用单利模式加载一个日志工厂
         CommonLoggerFactory loggerFactory = StdoutCommonLoggerFactory.INSTANCE;
+        // 跟踪元数据加载服务
         TraceMetadataLoaderService typeLoaderService = new DefaultTraceMetadataLoaderService(pluginJars, loggerFactory);
+        // 服务类型注册服务
         ServiceTypeRegistryService serviceTypeRegistryService = new DefaultServiceTypeRegistryService(typeLoaderService, loggerFactory);
+        // 注解密钥注册服务
         AnnotationKeyRegistryService annotationKeyRegistryService = new DefaultAnnotationKeyRegistryService(typeLoaderService, loggerFactory);
 
+        // 这一步读取配置文件pinpoint.config
         String configPath = getConfigPath(classPathResolver);
         if (configPath == null) {
             return false;
         }
 
         // set the path of log file as a system property
+        // 将日志文件路径和版本信息写入系统属性
         saveLogFilePath(classPathResolver);
 
         savePinpointVersion();
 
         try {
             // Is it right to load the configuration in the bootstrap?
+            // 这个方法加载pinpoint.config配置文件
             ProfilerConfig profilerConfig = DefaultProfilerConfig.load(configPath);
 
             // this is the library list that must be loaded

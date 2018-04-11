@@ -34,9 +34,11 @@ public final class MathUtils {
         if (multipleOf < 1) {
             throw new IllegalArgumentException("cannot round to nearest multiple of values less than 1");
         }
+        // 当num<multipleOf 返回multipleOf
         if (num < multipleOf) {
             return multipleOf;
         }
+        // 当数字num取余 大于等于 倍数/2 时 返回num+倍数-余值
         if ((num % multipleOf) >= (multipleOf / 2.0)) {
             return (num + multipleOf) - (num % multipleOf);
         } else {

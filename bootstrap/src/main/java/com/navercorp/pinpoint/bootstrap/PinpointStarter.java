@@ -124,6 +124,7 @@ class PinpointStarter {
             ProfilerConfig profilerConfig = DefaultProfilerConfig.load(configPath);
 
             // this is the library list that must be loaded
+            // 这是必须加载的库列表
             List<URL> libUrlList = resolveLib(classPathResolver);
             AgentClassLoader agentClassLoader = new AgentClassLoader(libUrlList.toArray(new URL[libUrlList.size()]));
             final String bootClass = getBootClass();

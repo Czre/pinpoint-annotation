@@ -47,6 +47,7 @@ public class DefaultProfilerConfig implements ProfilerConfig {
     public static final String INSTRUMENT_ENGINE_JAVASSIST = "JAVASSIST";
     public static final String INSTRUMENT_ENGINE_ASM = "ASM";
 
+    // 默认的采集间隔
     public static final int DEFAULT_AGENT_STAT_COLLECTION_INTERVAL_MS = 5 * 1000;
     public static final int DEFAULT_NUM_AGENT_STAT_BATCH_SEND = 6;
 
@@ -73,6 +74,12 @@ public class DefaultProfilerConfig implements ProfilerConfig {
         }
     }
 
+    /**
+     * 加载pinpoint.config文件?
+     * @param pinpointConfigFileName
+     * @return
+     * @throws IOException
+     */
     public static ProfilerConfig load(String pinpointConfigFileName) throws IOException {
         try {
             Properties properties = PropertyUtils.loadProperty(pinpointConfigFileName);

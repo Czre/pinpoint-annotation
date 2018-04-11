@@ -61,6 +61,7 @@ public class TimeWindow implements Iterable<Long> {
      * @return
      */
     public long refineTimestamp(long timestamp) {
+        // 这儿做一步5000ms的格式化操作 windowSlotSize=5000
         long time = (timestamp / windowSlotSize) * windowSlotSize;
         return time;
     }

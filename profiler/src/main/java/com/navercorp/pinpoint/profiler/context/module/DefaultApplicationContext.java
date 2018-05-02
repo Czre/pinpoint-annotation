@@ -98,26 +98,37 @@ public class DefaultApplicationContext implements ApplicationContext {
             logger.info("DefaultAgent classLoader:{}", this.getClass().getClassLoader());
         }
 
+        // 这儿创建ApplicationContextModule来完成组件注入
         final Module applicationContextModule = moduleFactory.newModule(agentOption, interceptorRegistryBinder);
+        // 在给定的开发阶段为给定的模块组创建一个注入器。PRODUCTION 表示 希望尽可能早地发现错误，并提前展现性能。
         this.injector = Guice.createInjector(Stage.PRODUCTION, applicationContextModule);
-
+        // 使用injector 注入一些类
         this.instrumentEngine = injector.getInstance(InstrumentEngine.class);
 
         this.classFileDispatcher = injector.getInstance(ClassFileTransformerDispatcher.class);
         this.dynamicTransformTrigger = injector.getInstance(DynamicTransformTrigger.class);
-//        ClassFileTransformer classFileTransformer = injector.getInstance(ClassFileTransformer.class);
+        // ClassFileTransformer classFileTransformer = injector.getInstance(ClassFileTransformer.class);
         ClassFileTransformer classFileTransformer = wrap(classFileDispatcher);
+        // 添加转换器并且将其确定为能重新转换 reTransformed
         instrumentation.addTransformer(classFileTransformer, true);
 
+        /*
+         ************************************使用Guice插件来定义发送的方法************************************************
+         */
+        // SpanStatClientFactory span统计的客户端工厂
         this.spanStatClientFactory = injector.getInstance(Key.get(PinpointClientFactory.class, SpanStatClientFactory.class));
         logger.info("spanStatClientFactory:{}", spanStatClientFactory);
 
+        // 为什么span和stat要使用方法来创建？？？
+        // 创建UDP Span发送者
         this.spanDataSender = newUdpSpanDataSender();
         logger.info("spanDataSender:{}", spanDataSender);
 
+        // 创建UDP 统计数据发送者
         this.statDataSender = newUdpStatDataSender();
         logger.info("statDataSender:{}", statDataSender);
 
+        // DefaultClientFactory 默认的客户端工厂
         this.clientFactory = injector.getInstance(Key.get(PinpointClientFactory.class, DefaultClientFactory.class));
         logger.info("clientFactory:{}", clientFactory);
 
@@ -130,11 +141,21 @@ public class DefaultApplicationContext implements ApplicationContext {
         logger.info("agentInformation:{}", agentInformation);
         this.serverMetaDataRegistryService = injector.getInstance(ServerMetaDataRegistryService.class);
 
+
         this.deadlockMonitor = injector.getInstance(DeadlockMonitor.class);
         this.agentInfoSender = injector.getInstance(AgentInfoSender.class);
         this.agentStatMonitor = injector.getInstance(AgentStatMonitor.class);
+        /*
+         *************************************************************************************************************
+         */
     }
 
+    /**
+     * 去profiler配置文件里找到bytecode.dump.enable值
+     *
+     * @param classFileTransformerDispatcher
+     * @return
+     */
     public ClassFileTransformer wrap(ClassFileTransformerDispatcher classFileTransformerDispatcher) {
         final boolean enableBytecodeDump = profilerConfig.readBoolean(ASMBytecodeDumpService.ENABLE_BYTECODE_DUMP, ASMBytecodeDumpService.ENABLE_BYTECODE_DUMP_DEFAULT_VALUE);
         if (enableBytecodeDump) {
@@ -144,6 +165,12 @@ public class DefaultApplicationContext implements ApplicationContext {
         return classFileTransformerDispatcher;
     }
 
+    /**
+     * 没有地方调用这个？？？
+     * @param agentOption agent参数
+     * @param interceptorRegistryBinder 拦截器注册绑定者
+     * @return
+     */
     protected Module newApplicationContextModule(AgentOption agentOption, InterceptorRegistryBinder interceptorRegistryBinder) {
         return new ApplicationContextModule(agentOption, interceptorRegistryBinder);
     }

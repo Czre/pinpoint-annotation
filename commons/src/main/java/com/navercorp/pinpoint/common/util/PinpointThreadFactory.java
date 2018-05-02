@@ -39,10 +39,16 @@ public class PinpointThreadFactory implements ThreadFactory {
         this(threadName, false);
     }
 
+    /**
+     * pinpoint线程工厂
+     * @param threadName
+     * @param daemon
+     */
     public PinpointThreadFactory(String threadName, boolean daemon) {
         if (threadName == null) {
             throw new NullPointerException("threadName");
         }
+        // FACTORY_NUMBER.getAndIncrement() 原子上增加一个当前值 1
         this.threadPrefix = prefix(threadName, FACTORY_NUMBER.getAndIncrement());
         this.daemon = daemon;
     }

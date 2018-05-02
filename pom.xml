@@ -305,6 +305,7 @@
             </dependency>
 
             <!-- serving performance metrics -->
+            <!--JVM实时监控类库-->
             <dependency>
                 <groupId>io.dropwizard.metrics</groupId>
                 <artifactId>metrics-core</artifactId>
@@ -320,7 +321,9 @@
                 <artifactId>metrics-servlets</artifactId>
                 <version>${metrics.version}</version>
             </dependency>
+            <!--end-->
 
+            <!--jackson-->
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-core</artifactId>
@@ -336,6 +339,7 @@
                 <artifactId>jackson-databind</artifactId>
                 <version>${fastxml.jackson.version}</version>
             </dependency>
+            <!--end-->
 
             <dependency>
                 <groupId>org.apache.hbase</groupId>
@@ -349,6 +353,7 @@
                 <version>0.1.0</version>
             </dependency>
 
+            <!--日志-->
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
@@ -370,7 +375,9 @@
                 <artifactId>log4j</artifactId>
                 <version>1.2.16</version>
             </dependency>
+            <!--end-->
 
+            <!--连接池和驱动-->
             <dependency>
                 <groupId>commons-dbcp</groupId>
                 <artifactId>commons-dbcp</artifactId>
@@ -411,7 +418,8 @@
                 <artifactId>jtds</artifactId>
                 <version>1.2.8</version>
             </dependency>
-
+            <!--end-->
+            <!--http服务-->
             <dependency>
                 <groupId>com.ning</groupId>
                 <artifactId>async-http-client</artifactId>
@@ -444,6 +452,7 @@
                 <artifactId>coyote</artifactId>
                 <version>6.0.43</version>
             </dependency>
+            <!--日志-->
 
             <dependency>
                 <groupId>com.navercorp.arcus</groupId>
@@ -569,9 +578,7 @@
                 <version>1.4.7</version>
             </dependency>
 
-
-
-
+            <!--字节码-->
             <dependency>
                 <groupId>org.javassist</groupId>
                 <artifactId>javassist</artifactId>
@@ -594,7 +601,7 @@
                 <artifactId>aspectjweaver</artifactId>
                 <version>1.8.10</version>
             </dependency>
-
+            <!--end-->
 
 
             <dependency>
@@ -625,7 +632,7 @@
             </dependency>
 
 
-
+            <!--测试-->
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
@@ -646,7 +653,7 @@
                 <artifactId>dbunit</artifactId>
                 <version>2.4.3</version>
             </dependency>
-
+            <!--end-->
 
             <dependency>
                 <groupId>org.apache.zookeeper</groupId>
@@ -693,17 +700,19 @@
                 </exclusions>
             </dependency>
 
+            <!--google插件-->
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>20.0</version>
             </dependency>
+            <!--依赖注入-->
             <dependency>
                 <groupId>com.google.inject</groupId>
                 <artifactId>guice</artifactId>
                 <version>4.1.0</version>
             </dependency>
-
+            <!--end-->
 
             <dependency>
                 <groupId>com.alibaba</groupId>
@@ -717,6 +726,7 @@
                 <version>5.13.2</version>
             </dependency>
 
+            <!--apache cxf-->
             <dependency>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-rt-frontend-jaxws</artifactId>
@@ -727,7 +737,7 @@
                 <artifactId>cxf-rt-transports-http</artifactId>
                 <version>2.7.18</version>
             </dependency>
-
+            <!--end-->
             <dependency>
                 <groupId>com.netflix.hystrix</groupId>
                 <artifactId>hystrix-core</artifactId>

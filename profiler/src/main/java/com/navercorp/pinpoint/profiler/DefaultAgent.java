@@ -38,51 +38,43 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * agent探查数据的主要类
+ *
  * @author emeroad
  * @author koo.taejin
  * @author hyungil.jeong
  */
 public class DefaultAgent implements Agent {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    private final PLoggerBinder binder;
-
-    private final ProfilerConfig profilerConfig;
-
-    private final ApplicationContext applicationContext;
-
-
-    private final Object agentStatusLock = new Object();
-    private volatile AgentStatus agentStatus;
-
-    private final InterceptorRegistryBinder interceptorRegistryBinder;
-    private final ServiceTypeRegistryService serviceTypeRegistryService;
-    
-
     static {
         // Preload classes related to pinpoint-rpc module.
+        // 与pinpoint-rpc模块相关的预加载类。
+        // 这儿跳到RPC部分
         ClassPreLoader.preload();
     }
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final PLoggerBinder binder;
+    private final ProfilerConfig profilerConfig;
+    private final ApplicationContext applicationContext;
+    private final Object agentStatusLock = new Object();
+    private final InterceptorRegistryBinder interceptorRegistryBinder;
+    private final ServiceTypeRegistryService serviceTypeRegistryService;
+    private volatile AgentStatus agentStatus;
+
+    /**
+     * 这个AgentOption是怎么调用的呢
+     * 难道是通过bootstrap/PinpointStarter的Boot_Class调用？
+     * 确实是这样调用的
+     *
+     * @param agentOption
+     */
     public DefaultAgent(AgentOption agentOption) {
         this(agentOption, createInterceptorRegistry(agentOption));
     }
 
-    public static InterceptorRegistryBinder createInterceptorRegistry(AgentOption agentOption) {
-        final int interceptorSize = getInterceptorSize(agentOption);
-        return new DefaultInterceptorRegistryBinder(interceptorSize);
-    }
-
-    private static int getInterceptorSize(AgentOption agentOption) {
-        if (agentOption == null) {
-            return DefaultInterceptorRegistryBinder.DEFAULT_MAX;
-        }
-        final ProfilerConfig profilerConfig = agentOption.getProfilerConfig();
-        return profilerConfig.getInterceptorRegistrySize();
-    }
-
     public DefaultAgent(AgentOption agentOption, final InterceptorRegistryBinder interceptorRegistryBinder) {
+        System.out.println(agentOption);
         if (agentOption == null) {
             throw new NullPointerException("agentOption must not be null");
         }
@@ -100,25 +92,54 @@ public class DefaultAgent implements Agent {
             throw new NullPointerException("interceptorRegistryBinder must not be null");
         }
         logger.info("AgentOption:{}", agentOption);
-
+        // 绑定日志工厂
         this.binder = new Slf4jLoggerBinder();
         bindPLoggerFactory(this.binder);
 
+        // 使用原子方式操作拦截器注册绑定者
         this.interceptorRegistryBinder = interceptorRegistryBinder;
         interceptorRegistryBinder.bind();
+        // 默认服务类型注册表服务
         this.serviceTypeRegistryService = agentOption.getServiceTypeRegistryService();
 
+        // dump系统变量
         dumpSystemProperties();
+        // dump配置信息
         dumpConfig(agentOption.getProfilerConfig());
-
+        // 改变agent状态为初始化
         changeStatus(AgentStatus.INITIALIZING);
 
         this.profilerConfig = agentOption.getProfilerConfig();
 
         this.applicationContext = newApplicationContext(agentOption, interceptorRegistryBinder);
 
-        
+
         InterceptorInvokerHelper.setPropagateException(profilerConfig.isPropagateInterceptorException());
+    }
+
+    /**
+     * 根据获取到的拦截器大小 来创建相应大小的拦截器
+     *
+     * @param agentOption 探针的配置参数，大概就是pinpoint.config
+     * @return
+     */
+    public static InterceptorRegistryBinder createInterceptorRegistry(AgentOption agentOption) {
+        final int interceptorSize = getInterceptorSize(agentOption);
+        return new DefaultInterceptorRegistryBinder(interceptorSize);
+    }
+
+    /**
+     * 获取注册拦截器大小 在pinpoint.config默认是8192 在代码层级 DEFAULT_MAX也是8192
+     *
+     * @param agentOption 探针的配置参数，大概就是pinpoint.config
+     * @return
+     */
+    private static int getInterceptorSize(AgentOption agentOption) {
+        if (agentOption == null) {
+            return DefaultInterceptorRegistryBinder.DEFAULT_MAX;
+        }
+        final ProfilerConfig profilerConfig = agentOption.getProfilerConfig();
+        return profilerConfig.getInterceptorRegistrySize();
     }
 
     protected ApplicationContext newApplicationContext(AgentOption agentOption, InterceptorRegistryBinder interceptorRegistryBinder) {
@@ -138,7 +159,6 @@ public class DefaultAgent implements Agent {
     private void dumpConfig(ProfilerConfig profilerConfig) {
         if (logger.isInfoEnabled()) {
             logger.info("{}\n{}", "dumpConfig", profilerConfig);
-
         }
     }
 
@@ -162,7 +182,7 @@ public class DefaultAgent implements Agent {
     public ServiceTypeRegistryService getServiceTypeRegistryService() {
         return serviceTypeRegistryService;
     }
-    
+
     @Override
     public void start() {
         synchronized (agentStatusLock) {

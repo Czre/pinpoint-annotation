@@ -43,6 +43,7 @@ public class MemoryMetricProvider implements Provider<MemoryMetric> {
     public MemoryMetric get() {
         MemoryMetric memoryMetric = new UnknownMemoryMetric();
         MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+        // 当ManagementFactory获取到的内存信息不为空时，将其转换成DefaultMemoryMetric再返回
         if (memoryMXBean != null) {
             memoryMetric = new DefaultMemoryMetric(memoryMXBean);
         }

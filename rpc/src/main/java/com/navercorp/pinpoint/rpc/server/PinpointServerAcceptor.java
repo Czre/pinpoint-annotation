@@ -61,42 +61,35 @@ import java.util.concurrent.TimeUnit;
  */
 public class PinpointServerAcceptor implements PinpointServerConfig {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
     private static final long DEFAULT_TIMEOUT_MILLIS = 3 * 1000;
     private static final long CHANNEL_CLOSE_MAXIMUM_WAITING_TIME_MILLIS = 3 * 1000;
     private static final int HEALTH_CHECK_INTERVAL_TIME_MILLIS = 5 * 60 * 1000;
+    // 获取当前可用的CPU数量 * 2 这一步是为了获取系统资源而做的处理
+    // 为什么？
     private static final int WORKER_COUNT = CpuUtils.workerCount();
-
-    private volatile boolean released;
-
-    private ServerBootstrap bootstrap;
-
-    private InetAddress[] ignoreAddressList;
-
-    private Channel serverChannel;
-    private final ChannelGroup channelGroup = new DefaultChannelGroup("PinpointServerFactory");
-
-    private final PinpointServerChannelHandler nettyChannelHandler = new PinpointServerChannelHandler();
-
-    private ServerMessageListener messageListener = SimpleServerMessageListener.SIMPLEX_INSTANCE;
-    private ServerStreamChannelMessageListener serverStreamChannelMessageListener = DisabledServerStreamChannelMessageListener.INSTANCE;
-    private List<ServerStateChangeEventHandler> stateChangeEventHandler = new ArrayList<ServerStateChangeEventHandler>();
-
-    private final Timer healthCheckTimer;
-    private final HealthCheckManager healthCheckManager;
-
-    private final Timer requestManagerTimer;
-
-    private final ClusterOption clusterOption;
-
-    private long defaultRequestTimeout = DEFAULT_TIMEOUT_MILLIS;
 
     static {
         LoggerFactorySetup.setupSlf4jLoggerFactory();
     }
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final ChannelGroup channelGroup = new DefaultChannelGroup("PinpointServerFactory");
+    private final PinpointServerChannelHandler nettyChannelHandler = new PinpointServerChannelHandler();
+    private final Timer healthCheckTimer;
+    private final HealthCheckManager healthCheckManager;
+    private final Timer requestManagerTimer;
+    private final ClusterOption clusterOption;
+    private volatile boolean released;
+    private ServerBootstrap bootstrap;
+    private InetAddress[] ignoreAddressList;
+    private Channel serverChannel;
+    private ServerMessageListener messageListener = SimpleServerMessageListener.SIMPLEX_INSTANCE;
+    private ServerStreamChannelMessageListener serverStreamChannelMessageListener = DisabledServerStreamChannelMessageListener.INSTANCE;
+    private List<ServerStateChangeEventHandler> stateChangeEventHandler = new ArrayList<ServerStateChangeEventHandler>();
+    private long defaultRequestTimeout = DEFAULT_TIMEOUT_MILLIS;
+
     public PinpointServerAcceptor() {
+        // 获取一个初始化的集群配置 默认状态是false,id为"",roles为空list
         this(ClusterOption.DISABLE_CLUSTER_OPTION);
     }
 
@@ -114,8 +107,17 @@ public class PinpointServerAcceptor implements PinpointServerConfig {
         this.clusterOption = clusterOption;
     }
 
+    /**
+     * 这个方法创建两个NIO线程组 Boss和worker
+     * 并返回一个serverBootstrap对象 将创建boss和worker线程组放入SocketChannelFactory
+     *
+     * @param bossCount   1个老板
+     * @param workerCount double工人？
+     * @return
+     */
     private ServerBootstrap createBootStrap(int bossCount, int workerCount) {
         // profiler, collector
+        // 创建缓存线程池
         ExecutorService boss = Executors.newCachedThreadPool(new PinpointThreadFactory("Pinpoint-Server-Boss", true));
         NioServerBossPool nioServerBossPool = new NioServerBossPool(boss, bossCount, ThreadNameDeterminer.CURRENT);
 
@@ -126,12 +128,17 @@ public class PinpointServerAcceptor implements PinpointServerConfig {
         return new ServerBootstrap(nioClientSocketChannelFactory);
     }
 
+    /**
+     * Netty的属性设置
+     * @param bootstrap
+     */
     private void setOptions(ServerBootstrap bootstrap) {
         // is read/write timeout necessary? don't need it because of NIO?
         // write timeout should be set through additional interceptor. write
         // timeout exists.
 
         // tcp setting
+        // TCP_NODELAY就是用于启用或关于Nagle算法。如果要求高实时性，有数据发送时就马上发送，就将该选项设置为true关闭Nagle算法；如果要减少发送次数减少网络交互，就设置为false等累积一定大小后再发送。默认为false。
         bootstrap.setOption("child.tcpNoDelay", true);
         bootstrap.setOption("child.keepAlive", true);
         // buffer setting
@@ -159,13 +166,18 @@ public class PinpointServerAcceptor implements PinpointServerConfig {
         bind(bindAddress);
     }
 
+    /**
+     * 创建阻塞线程绑定到指定本地地址的新通道 知道绑定成功
+     * @param bindAddress
+     * @throws PinpointSocketException
+     */
     public void bind(InetSocketAddress bindAddress) throws PinpointSocketException {
         if (released) {
             return;
         }
-
         logger.info("bind() {}", bindAddress);
         this.serverChannel = bootstrap.bind(bindAddress);
+        // 5分钟时间
         healthCheckManager.start(HEALTH_CHECK_INTERVAL_TIME_MILLIS);
     }
 
@@ -258,7 +270,7 @@ public class PinpointServerAcceptor implements PinpointServerConfig {
         }
         healthCheckManager.stop();
         healthCheckTimer.stop();
-        
+
         closePinpointServer();
 
         if (serverChannel != null) {
@@ -274,7 +286,7 @@ public class PinpointServerAcceptor implements PinpointServerConfig {
         // clear the request first and remove timer
         requestManagerTimer.stop();
     }
-    
+
     private void closePinpointServer() {
         for (Channel channel : channelGroup) {
             DefaultPinpointServer pinpointServer = (DefaultPinpointServer) channel.getAttachment();
@@ -284,7 +296,7 @@ public class PinpointServerAcceptor implements PinpointServerConfig {
             }
         }
     }
-    
+
     public List<PinpointSocket> getWritableSocketList() {
         List<PinpointSocket> pinpointServerList = new ArrayList<PinpointSocket>();
 
@@ -298,7 +310,20 @@ public class PinpointServerAcceptor implements PinpointServerConfig {
         return pinpointServerList;
     }
 
+    /**
+     * 这儿关于管道的服务 重写了主要的业务方法
+     */
     class PinpointServerChannelHandler extends SimpleChannelHandler {
+        /**
+         * 首先获取管道
+         * 在关闭数据包服务中添加一个监听 并重写operationComplete方法
+         * 使用默认的pinpoint服务创建管道服务
+         * set pinpoint服务
+         * 管道组添加该管道 并启动服务
+         * @param ctx
+         * @param e
+         * @throws Exception
+         */
         @Override
         public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
             final Channel channel = e.getChannel();
@@ -322,7 +347,7 @@ public class PinpointServerAcceptor implements PinpointServerConfig {
             }
 
             DefaultPinpointServer pinpointServer = createPinpointServer(channel);
-            
+
             channel.setAttachment(pinpointServer);
             channelGroup.add(channel);
 
@@ -331,6 +356,12 @@ public class PinpointServerAcceptor implements PinpointServerConfig {
             super.channelConnected(ctx, e);
         }
 
+        /**
+         * 关闭管道
+         * @param ctx
+         * @param e
+         * @throws Exception
+         */
         @Override
         public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
             final Channel channel = e.getChannel();
@@ -343,9 +374,14 @@ public class PinpointServerAcceptor implements PinpointServerConfig {
             super.channelDisconnected(ctx, e);
         }
 
-        // ChannelClose event may also happen when the other party close socket
-        // first and Disconnected occurs
-        // Should consider that.
+        /**
+         * 管道关闭 由pinpointServerFactory生成的管道组会删除这个管道
+         * 当对方先关闭套接字并断开连接时，通道关闭事件也可能发生应该考虑这一点。
+         *
+         * @param ctx
+         * @param e
+         * @throws Exception
+         */
         @Override
         public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
             final Channel channel = e.getChannel();
@@ -355,6 +391,13 @@ public class PinpointServerAcceptor implements PinpointServerConfig {
             super.channelClosed(ctx, e);
         }
 
+        /**
+         * 获取附件 该方法主要是加入pinpoint服务来触发消息
+         *
+         * @param ctx
+         * @param e
+         * @throws Exception
+         */
         @Override
         public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
             final Channel channel = e.getChannel();

@@ -46,10 +46,19 @@ public class AgentClassLoader {
 
         ClassLoader bootStrapClassLoader = AgentClassLoader.class.getClassLoader();
         this.classLoader = createClassLoader(urls, bootStrapClassLoader);
-
+        // 创建一个ClassLoader
         this.executeTemplate = new ContextClassLoaderExecuteTemplate<Object>(classLoader);
     }
 
+    /**
+     * 创建类加载器
+     * System.getSecurityManager 对运行的代码权限进行控制
+     * 有安全管理器的执行方式和没有安全管理器的执行方式没有太多的差别
+     * 都是使用PinpointClassLoaderFactory.createClassLoader来加载类
+     * @param urls
+     * @param bootStrapClassLoader
+     * @return
+     */
     private URLClassLoader createClassLoader(final URL[] urls, final ClassLoader bootStrapClassLoader) {
         if (SECURITY_MANAGER != null) {
             return AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() {

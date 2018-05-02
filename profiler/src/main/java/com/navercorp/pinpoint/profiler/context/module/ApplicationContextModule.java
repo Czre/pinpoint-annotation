@@ -169,6 +169,7 @@ import java.util.List;
 
 
 /**
+ * Guice的依赖注入配置类
  * @author Woonduk Kang(emeroad)
  */
 public class ApplicationContextModule extends AbstractModule {
@@ -201,6 +202,8 @@ public class ApplicationContextModule extends AbstractModule {
         TypeLiteral<List<String>> listString = new TypeLiteral<List<String>>() {};
         bind(listString).annotatedWith(BootstrapJarPaths.class).toInstance(agentOption.getBootstrapJarPaths());
 
+        // 这儿拿到instrumentation中设置的agentId和applicationName
+        // 那一个agent启动的一个服务 只有有一个agentId和ApplicationName
         bindAgentInformation(agentOption.getAgentId(), agentOption.getApplicationName());
 
         bindDataTransferComponent();
@@ -297,14 +300,21 @@ public class ApplicationContextModule extends AbstractModule {
         bind(PredefinedMethodDescriptorRegistry.class).to(DefaultPredefinedMethodDescriptorRegistry.class).in(Scopes.SINGLETON);
     }
 
+    /**
+     *
+     * @param agentId
+     * @param applicationName
+     */
     private void bindAgentInformation(String agentId, String applicationName) {
-
         bind(String.class).annotatedWith(AgentId.class).toInstance(agentId);
         bind(String.class).annotatedWith(ApplicationName.class).toInstance(applicationName);
         bind(Long.class).annotatedWith(AgentStartTime.class).toProvider(AgentStartTimeProvider.class).in(Scopes.SINGLETON);
         bind(ServiceType.class).annotatedWith(ApplicationServerType.class).toProvider(ApplicationServerTypeProvider.class).in(Scopes.SINGLETON);
     }
 
+    /**
+     * 绑定Agent统计组件
+     */
     private void bindAgentStatComponent() {
         bind(MemoryMetric.class).toProvider(MemoryMetricProvider.class).in(Scopes.SINGLETON);
         bind(DetailedMemoryMetric.class).toProvider(DetailedMemoryMetricProvider.class).in(Scopes.SINGLETON);

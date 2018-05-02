@@ -105,6 +105,7 @@ public class DefaultPinpointClientFactory implements PinpointClientFactory {
         }
 
         // create a timer earlier because it is used for connectTimeout
+        // 先创建一个计时器，因为它用于连接超时
         Timer timer = createTimer();
         ClientBootstrap bootstrap = createBootStrap(bossCount, workerCount, timer);
         setOptions(bootstrap);
@@ -114,6 +115,10 @@ public class DefaultPinpointClientFactory implements PinpointClientFactory {
         this.timer = timer;
     }
 
+    /**
+     * 创建一个计时器 并开始这个计时器 并返回这个计时器
+     * @return
+     */
     private Timer createTimer() {
         HashedWheelTimer timer = TimerFactory.createHashedWheelTimer("Pinpoint-SocketFactory-Timer", 100, TimeUnit.MILLISECONDS, 512);
         timer.start();

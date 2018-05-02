@@ -349,10 +349,12 @@ public class AgentDirBaseClassPathResolver implements ClassPathResolver {
         }
 
         // hot fix. boot jars not found from classPool ??
+        // 热修复。 从类Pool中找不到引导罐
         jarURLList.add(toURI(new File(getPinpointCommonsJar())));
         jarURLList.add(toURI(new File(getBootStrapCoreJar())));
         String bootstrapCoreOptionalJar = getBootStrapCoreOptionalJar();
         // bootstrap-core-optional jar is not required and is okay to be null
+        // bootstrap-core-optional.jar不是必需的，可以为空
         if (bootstrapCoreOptionalJar != null) {
             jarURLList.add(toURI(new File(bootstrapCoreOptionalJar)));
         }

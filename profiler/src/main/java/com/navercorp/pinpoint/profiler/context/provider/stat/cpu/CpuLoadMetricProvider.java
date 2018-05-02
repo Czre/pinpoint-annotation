@@ -55,6 +55,13 @@ public class CpuLoadMetricProvider implements Provider<CpuLoadMetric> {
         vendorName = profilerConfig.getProfilerJvmVendorName();
     }
 
+    /**
+     * get()通过provider来完成CpuLoadMetricProvider类的构造
+     * 通过读取系统变量的参数来获取到
+     * JDK类型,JDK版本
+     * 通过上面两个参数拿到classToLoad来调用createCpuLoadMetric方法
+     * @return
+     */
     @Override
     public CpuLoadMetric get() {
         String classToLoad = null;
@@ -81,6 +88,15 @@ public class CpuLoadMetricProvider implements Provider<CpuLoadMetric> {
         return cpuLoadMetric;
     }
 
+    /**
+     *,去匹配相对应的classToLoad JDK7调用的方法只有一个构造器
+     * 如果出现NoSuchMethodException异常
+     * 则会进入JDK6的判断 JDK6的构造器会有两个参数来执行
+     * 如果还没有匹配到
+     * 则返回CpuLoadMetric.UNSUPPORTED_CPU_LOAD_METRIC
+     * @param classToLoad 加载的全路径类名
+     * @return 返回一个CpuLoadMetric实例
+     */
     private CpuLoadMetric createCpuLoadMetric(String classToLoad) {
         if (classToLoad == null) {
             return CpuLoadMetric.UNSUPPORTED_CPU_LOAD_METRIC;

@@ -38,26 +38,20 @@ import java.util.Map;
 
 /**
  * @author Jongho Moon
- *
  */
 class PinpointStarter {
 
-    private final BootLogger logger = BootLogger.getLogger(PinpointStarter.class.getName());
-
     public static final String AGENT_TYPE = "AGENT_TYPE";
-
     public static final String DEFAULT_AGENT = "DEFAULT_AGENT";
     public static final String BOOT_CLASS = "com.navercorp.pinpoint.profiler.DefaultAgent";
-
     public static final String PLUGIN_TEST_AGENT = "PLUGIN_TEST";
     public static final String PLUGIN_TEST_BOOT_CLASS = "com.navercorp.pinpoint.test.PluginTestAgent";
-
-    private SimpleProperty systemProperty = SystemProperty.INSTANCE;
-
+    private final BootLogger logger = BootLogger.getLogger(PinpointStarter.class.getName());
     private final Map<String, String> agentArgs;
     private final BootstrapJarFile bootstrapJarFile;
     private final ClassPathResolver classPathResolver;
     private final Instrumentation instrumentation;
+    private SimpleProperty systemProperty = SystemProperty.INSTANCE;
 
 
     public PinpointStarter(Map<String, String> agentArgs, BootstrapJarFile bootstrapJarFile, ClassPathResolver classPathResolver, Instrumentation instrumentation) {
@@ -126,12 +120,14 @@ class PinpointStarter {
             // this is the library list that must be loaded
             // 这是必须加载的库列表
             List<URL> libUrlList = resolveLib(classPathResolver);
+            // 将agent中所有的jar包添加进类agent类加载器
             AgentClassLoader agentClassLoader = new AgentClassLoader(libUrlList.toArray(new URL[libUrlList.size()]));
+            // 获取核心jar包pinpoint-bootstrap.jar的绝对路径
             final String bootClass = getBootClass();
             agentClassLoader.setBootClass(bootClass);
             logger.info("pinpoint agent [" + bootClass + "] starting...");
 
-
+            // 创建agent参数
             AgentOption option = createAgentOption(agentId, applicationName, profilerConfig, instrumentation, pluginJars, bootstrapJarFile, serviceTypeRegistryService, annotationKeyRegistryService);
             Agent pinpointAgent = agentClassLoader.boot(option);
             pinpointAgent.start();
@@ -146,6 +142,7 @@ class PinpointStarter {
     }
 
     private String getBootClass() {
+        // 将获取到的AgentType转换为大写 进行匹配
         final String agentType = getAgentType().toUpperCase();
         if (PLUGIN_TEST_AGENT.equals(agentType)) {
             return PLUGIN_TEST_BOOT_CLASS;
@@ -169,6 +166,7 @@ class PinpointStarter {
                                           ServiceTypeRegistryService serviceTypeRegistryService,
                                           AnnotationKeyRegistryService annotationKeyRegistryService) {
         List<String> bootstrapJarPaths = bootstrapJarFile.getJarNameList();
+        // boot/ pinpoint-commons.jar,pinpoint-bootstrap-core.jar,pinpoint-bootstrap-core-optional.jar,pinpoint-annotations.jar 的绝对路径
         return new DefaultAgentOption(instrumentation, agentId, applicationName, profilerConfig, pluginJars, bootstrapJarPaths, serviceTypeRegistryService, annotationKeyRegistryService);
     }
 
@@ -223,6 +221,7 @@ class PinpointStarter {
 
     private List<URL> resolveLib(ClassPathResolver classPathResolver) {
         // this method may handle only absolute path,  need to handle relative path (./..agentlib/lib)
+        // 此方法可能只处理绝对路径，需要处理相对路径
         String agentJarFullPath = classPathResolver.getAgentJarFullPath();
         String agentLibPath = classPathResolver.getAgentLibPath();
         List<URL> urlList = resolveLib(classPathResolver.resolveLib());

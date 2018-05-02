@@ -646,6 +646,12 @@ public class DefaultProfilerConfig implements ProfilerConfig {
         return StringUtils.tokenizeToStringList(value, ",");
     }
 
+    /**
+     * 目前在profilerConfig配置中
+     * @param propertyName "bytecode.dump.enable"
+     * @param defaultValue false
+     * @return
+     */
     @Override
     public boolean readBoolean(String propertyName, boolean defaultValue) {
         String value = properties.getProperty(propertyName, Boolean.toString(defaultValue));

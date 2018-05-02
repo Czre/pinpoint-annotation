@@ -30,6 +30,7 @@ public interface PinpointClient extends PinpointSocket {
     /*
         because reconnectEventListener's constructor contains Dummy and can't be access through setter,
         guarantee it is not null.
+        因为重新连接Event Listener的构造函数包含Dummy，并且无法通过setter访问，请确保它不为null。
     */
     boolean addPinpointClientReconnectEventListener(PinpointClientReconnectEventListener eventListener);
 
@@ -46,6 +47,7 @@ public interface PinpointClient extends PinpointSocket {
     /**
      * write ping packet on tcp channel
      * PinpointSocketException throws when writing fails.
+     * 在tcp通道上写ping数据包Pinpoint Socket写入失败时抛出异常。
      *
      */
     void sendPing();

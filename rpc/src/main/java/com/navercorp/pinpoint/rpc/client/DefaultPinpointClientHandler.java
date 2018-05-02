@@ -310,9 +310,11 @@ public class DefaultPinpointClientHandler extends SimpleChannelHandler implement
             boolean cancel = channelFuture.cancel();
             if (cancel) {
                 // if IO not finished in 3 seconds, dose it mean timeout?
+                // 如果IO没有在3秒内完成，那么意味着超时？
                 throw new PinpointSocketException("io timeout");
             } else {
                 // same logic as above because of success
+                // 与上述相同的逻辑，但是是成功
                 boolean success = channelFuture.isSuccess();
                 if (success) {
                     return;

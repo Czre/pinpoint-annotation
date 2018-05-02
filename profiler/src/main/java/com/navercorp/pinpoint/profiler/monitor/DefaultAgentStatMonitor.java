@@ -36,7 +36,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * AgentStat monitor
+ * AgentStat监控类
+ * 默认读取pinpoint.config配置文件中的收集间隔和收集次数发送
  *
  * @author harebox
  * @author hyungil.jeong

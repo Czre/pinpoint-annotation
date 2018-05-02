@@ -25,6 +25,7 @@ import com.navercorp.pinpoint.rpc.client.PinpointClientFactory;
 import com.navercorp.pinpoint.rpc.server.PinpointServerAcceptor;
 
 /**
+ * 类的预装载程序
  * @author emeroad
  */
 public final class ClassPreLoader {
@@ -38,6 +39,11 @@ public final class ClassPreLoader {
         }
     }
 
+    /**
+     * 主要创建serverFactory和clientFactory
+     * 服务端和客户端工厂
+     * @param port
+     */
     public static void preload(int port) {
         PinpointServerAcceptor serverAcceptor = null;
         PinpointClient client = null;
@@ -46,10 +52,11 @@ public final class ClassPreLoader {
             serverAcceptor = new PinpointServerAcceptor();
             serverAcceptor.bind("127.0.0.1", port);
 
+            // 默认的pinpoint客户端工厂
             clientFactory = new DefaultPinpointClientFactory();
             client = clientFactory.connect("127.0.0.1", port);
+            // 这一步主要是给ChannelFuture添加成功消息和失败消息模板
             client.sendSync(new byte[0]);
-
 
         } catch (Exception ex) {
 

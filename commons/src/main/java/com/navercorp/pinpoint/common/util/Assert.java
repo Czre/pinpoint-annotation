@@ -16,15 +16,18 @@
 package com.navercorp.pinpoint.common.util;
 
 /**
+ * 手动编写的断言类 用来判断是否为null值 boolean值 和状态
  * @author Woonduk Kang(emeroad)
  * @since 1.7.0
  */
 public final class Assert {
-    private Assert() {}
+    private Assert() {
+    }
 
 
     public static <T> T requireNonNull(T object, String message) {
         if (object == null) {
+            // 空指针异常
             throw new NullPointerException(message);
         }
         return object;
@@ -32,12 +35,14 @@ public final class Assert {
 
     public static void isTrue(boolean condition, String message) {
         if (!condition) {
+            // 用指定的详细信息构造非法参数异常
             throw new IllegalArgumentException(message);
         }
     }
 
     public static void state(boolean state, String message) {
         if (!state) {
+            // 用指定的详细信息构造一个非法状态异常。 详细消息是描述此特定异常的字符串。
             throw new IllegalStateException(message);
         }
     }

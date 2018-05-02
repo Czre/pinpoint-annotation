@@ -138,6 +138,13 @@ public class HealthCheckManager {
             this.intervalMillis = intervalMillis;
         }
 
+        /**
+         * 迭代遍历管道组 获取到pinpoint服务
+         * 检测pinpoint服务的健康状态
+         *
+         * @param timeout
+         * @throws Exception
+         */
         @Override
         public void run(Timeout timeout) throws Exception {
             if (isStopped) {
@@ -158,18 +165,23 @@ public class HealthCheckManager {
                 HealthCheckState healthCheckState = pinpointServer.getHealthCheckState();
                 switch (healthCheckState) {
                     case RECEIVED:
+                        // 接收完的
                         if (isDebug) {
                             logger.debug("ping write. channel:{}, packet:{}.", channel, PING_PACKET);
                         }
+                        // 添加 simple ping 包 并添加写入失败监听
                         channel.write(PING_PACKET).addListener(writeFailListener);
                         break;
                     case RECEIVED_LEGACY:
+                        // 接收 遗产 未接收完的
                         if (isDebug) {
                             logger.debug("ping write. channel:{}, packet:{}.", channel, LEGACY_PING_PACKET);
                         }
+                        // 添加 ping 包 并添加写入失败监听
                         channel.write(LEGACY_PING_PACKET).addListener(writeFailListener);
                         break;
                     case WAIT:
+                        // 判断如果等待时间过长 则关闭管道
                         if (hasExpiredReceivingPing(pinpointServer)) {
                             logger.warn("expired while waiting to receive ping. channel:{} will be closed", channel);
                             channel.close();

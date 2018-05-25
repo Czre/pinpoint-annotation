@@ -25,6 +25,8 @@ import com.navercorp.pinpoint.profiler.metadata.ApiMetaDataService;
 import com.navercorp.pinpoint.profiler.objectfactory.ObjectBinderFactory;
 
 /**
+ * 对象粘合剂工厂提供商??? 由guice注入 通过get()方法拿到 对象粘合剂工厂
+ * web容器启动前执行方法before()和web容器启动完成后执行方法after()
  * @author Woonduk Kang(emeroad)
  */
 public class ObjectBinderFactoryProvider implements Provider<ObjectBinderFactory> {

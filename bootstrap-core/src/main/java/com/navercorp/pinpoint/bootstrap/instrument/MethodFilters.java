@@ -17,11 +17,13 @@ package com.navercorp.pinpoint.bootstrap.instrument;
 import java.util.Arrays;
 
 /**
+ * 方法过滤器
+ * 做了什么呢?
  * @author Jongho Moon
  *
  */
 public class MethodFilters {
-    public static final int SYNTHETIC = 0x00001000;
+    public static final int SYNTHETIC = 0x00001000;//4096
 
     private MethodFilters() {
     }

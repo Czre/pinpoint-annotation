@@ -16,18 +16,18 @@
 package com.navercorp.pinpoint.plugin.redis;
 
 /**
- * 
+ * 命令上下文
  * @author jaehong.kim
  *
  */
 public class CommandContext {
-    private long readBeginTime;
-    private long readEndTime;
-    private boolean readFail;
+    private long readBeginTime; // 读取开始时间
+    private long readEndTime; // 读取结束时间
+    private boolean readFail; // 读取失败
     
-    private long writeBeginTime;
-    private long writeEndTime;
-    private boolean writeFail;
+    private long writeBeginTime; // 写入开始时间
+    private long writeEndTime; // 写入结束时间
+    private boolean writeFail; // 写入失败
 
     public void setReadBeginTime(long readBeginTime) {
         this.readBeginTime = readBeginTime;

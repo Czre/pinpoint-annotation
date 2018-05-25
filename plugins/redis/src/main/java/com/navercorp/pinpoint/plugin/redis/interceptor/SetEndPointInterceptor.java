@@ -32,7 +32,8 @@ import com.navercorp.pinpoint.plugin.redis.EndPointAccessor;
 /**
  * Jedis (redis client) constructor interceptor
  * - trace endPoint
- *
+ * 这个Interceptor类主要的内容就是将链接redis数据库指定为endpoint 终节点
+ * 将jedis binaryJedis也就是redis客户端的构造函数,基本都是链接数据库的构造函数,植入SetEndPointInterceptor方法
  * @author jaehong.kim
  */
 public class SetEndPointInterceptor implements AroundInterceptor {
@@ -43,6 +44,11 @@ public class SetEndPointInterceptor implements AroundInterceptor {
     public SetEndPointInterceptor(TraceContext traceContext, MethodDescriptor methodDescriptor) {
     }
 
+    /**
+     * 在方法执行之前加入字节码以添加Trace数据
+     * @param target
+     * @param args
+     */
     @Override
     public void before(Object target, Object[] args) {
         if (isDebug) {
@@ -55,6 +61,7 @@ public class SetEndPointInterceptor implements AroundInterceptor {
             }
 
             final String endPoint = getEndPoint(args);
+            // 在这个接口中传递String endPoint?
             ((EndPointAccessor) target)._$PINPOINT$_setEndPoint(endPoint);
         } catch (Throwable t) {
             if (logger.isWarnEnabled()) {
@@ -64,15 +71,18 @@ public class SetEndPointInterceptor implements AroundInterceptor {
     }
 
     private String getEndPoint(Object[] args) {
-        // first arg is host
+        // 拿到终节点信息,大意就是ip和端口咯
         final Object argZero = args[0];
         if (argZero instanceof String) {
+            System.out.println(1);
             return EndPointUtils.getEndPoint(args);
         } else if (argZero instanceof URI) {
             final URI uri = (URI) argZero;
+            System.out.println(2);
             return HostAndPort.toHostAndPortString(uri.getHost(), uri.getPort());
         } else if (argZero instanceof JedisShardInfo) {
             final JedisShardInfo info = (JedisShardInfo) argZero;
+            System.out.println(3);
             return HostAndPort.toHostAndPortString(info.getHost(), info.getPort());
         }
         return "Unknown";

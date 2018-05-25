@@ -27,8 +27,9 @@ import com.navercorp.pinpoint.plugin.redis.CommandContext;
 
 /**
  * RedisConnection(nBase-ARC client) constructor interceptor - trace endPoint
- * 
- * @author jaehong.kim
+ * 这个类主要用来植入Protocol类的一些方法,而Protocol主要用来实现redis server的通讯
+ * before()与after()给CommandContext添加了一些记录,before记录beginTime,after记录了endTime和读写fail
+ * * @author jaehong.kim
  *
  */
 public class ProtocolSendCommandAndReadMethodInterceptor implements AroundInterceptor {
@@ -51,14 +52,16 @@ public class ProtocolSendCommandAndReadMethodInterceptor implements AroundInterc
         if (isDebug) {
             logger.beforeInterceptor(target, args);
         }
-
+        // 拿到当前Trace对象
         final Trace trace = traceContext.currentTraceObject();
         if (trace == null) {
             return;
         }
 
         try {
+            // 拿到当前调用
             final InterceptorScopeInvocation invocation = interceptorScope.getCurrentInvocation();
+
             final Object attachment = getAttachment(invocation);
             if (attachment instanceof CommandContext) {
                 final CommandContext commandContext = (CommandContext) attachment;

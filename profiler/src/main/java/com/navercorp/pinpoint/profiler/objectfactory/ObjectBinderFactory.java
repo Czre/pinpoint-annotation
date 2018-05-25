@@ -57,17 +57,38 @@ public class ObjectBinderFactory {
         this.apiMetaDataServiceProvider = apiMetaDataServiceProvider;
     }
 
+    /*
+    下面三个方法都是基于字节码修改所需要使用的方法
+     */
+
+    /**
+     * 自动绑定对象工厂
+     * @param pluginContext
+     * @param classLoader
+     * @param argumentProviders
+     * @return
+     */
     public AutoBindingObjectFactory newAutoBindingObjectFactory(InstrumentContext pluginContext, ClassLoader classLoader, ArgumentProvider... argumentProviders) {
         final TraceContext traceContext = this.traceContextProvider.get();
         return new AutoBindingObjectFactory(profilerConfig, traceContext, pluginContext, classLoader, argumentProviders);
     }
 
-
+    /**
+     * 参数拦截器工厂
+     * @param instrumentClass
+     * @return
+     */
     public InterceptorArgumentProvider newInterceptorArgumentProvider(InstrumentClass instrumentClass) {
         ApiMetaDataService apiMetaDataService = this.apiMetaDataServiceProvider.get();
         return new InterceptorArgumentProvider(dataSourceMonitorRegistry, apiMetaDataService, instrumentClass);
     }
 
+    /**
+     * 注释拦截器工厂
+     * @param pluginContext
+     * @param exceptionHandle
+     * @return
+     */
     public AnnotatedInterceptorFactory newAnnotatedInterceptorFactory(InstrumentContext pluginContext, boolean exceptionHandle) {
         final TraceContext traceContext = this.traceContextProvider.get();
         ApiMetaDataService apiMetaDataService = this.apiMetaDataServiceProvider.get();

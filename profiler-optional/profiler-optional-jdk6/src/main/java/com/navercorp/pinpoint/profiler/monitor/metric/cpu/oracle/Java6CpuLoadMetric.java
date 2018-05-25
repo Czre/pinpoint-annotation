@@ -45,7 +45,9 @@ public class Java6CpuLoadMetric implements CpuLoadMetric {
         double jvmCpuUsage = UNCOLLECTED_USAGE;
         if (runtimeMXBean != null) {
             long cpuTimeNS = operatingSystemMXBean.getProcessCpuTime();
+            // 以毫秒为单位返回Java虚拟机的正常运行时间
             long upTimeMS = runtimeMXBean.getUptime();
+            // 计算Cpu使用率
             jvmCpuUsage = jvmCpuUsageCalculator.getJvmCpuUsage(cpuTimeNS, upTimeMS);
         }
         double systemCpuUsage = UNCOLLECTED_USAGE;

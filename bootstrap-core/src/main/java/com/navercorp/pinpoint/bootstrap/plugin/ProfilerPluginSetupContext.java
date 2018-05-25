@@ -21,7 +21,9 @@ import com.navercorp.pinpoint.bootstrap.plugin.jdbc.JdbcUrlParserV2;
  *  Provides attributes and objects to interceptors.
  * 
  *  Only interceptors can acquire an instance of this class as a constructor argument.
- * 
+ *
+ * 为拦截器提供属性和对象。
+ * 只有拦截器才能获得这个类的实例作为构造函数参数
  * @author Jongho Moon
  *
  */

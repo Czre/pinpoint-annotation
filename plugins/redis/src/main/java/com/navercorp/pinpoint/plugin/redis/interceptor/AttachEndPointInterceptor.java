@@ -25,6 +25,8 @@ import com.navercorp.pinpoint.bootstrap.logging.PLoggerFactory;
 import com.navercorp.pinpoint.plugin.redis.EndPointAccessor;
 
 /**
+ * 链接终节点的植入类?
+ * 看操作流程是在执行之前,查看是否有endpoint 如果没有 则设置endpoint
  * @author jaehong.kim
  */
 public class AttachEndPointInterceptor implements AroundInterceptor {

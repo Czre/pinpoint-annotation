@@ -31,7 +31,8 @@ import com.navercorp.pinpoint.plugin.redis.RedisConstants;
 
 /**
  * Jedis (redis client) method interceptor
- *
+ * doInBeforeTrace()在需要植入的方法执行之前添加一个命令上下文附件,以便之后的方法植入可以获取或添加一些想要的数据
+ * doInAfterTrace() 根据判断添加一些SpanEvent数据 记录
  * @author jaehong.kim
  */
 public class JedisMethodInterceptor extends SpanEventSimpleAroundInterceptorForPlugin {
@@ -46,6 +47,12 @@ public class JedisMethodInterceptor extends SpanEventSimpleAroundInterceptorForP
         this.io = io;
     }
 
+    /**
+     * 在跟踪之前执行获取当前调用,当该对象不为空时,创建一个附件为命令上下文(CommandContextFactory)
+     * @param recorder
+     * @param target
+     * @param args
+     */
     @Override
     public void doInBeforeTrace(SpanEventRecorder recorder, Object target, Object[] args) {
         final InterceptorScopeInvocation invocation = interceptorScope.getCurrentInvocation();
@@ -59,21 +66,24 @@ public class JedisMethodInterceptor extends SpanEventSimpleAroundInterceptorForP
         String endPoint = null;
 
         if (target instanceof EndPointAccessor) {
+            // 获取endPoint数据
             endPoint = ((EndPointAccessor) target)._$PINPOINT$_getEndPoint();
         }
 
         final InterceptorScopeInvocation invocation = interceptorScope.getCurrentInvocation();
         final Object attachment = getAttachment(invocation);
+        // 匹配附件是否为命令上下文类型
         if (attachment instanceof CommandContext) {
             final CommandContext commandContext = (CommandContext) attachment;
             if (logger.isDebugEnabled()) {
                 logger.debug("Check command context {}", commandContext);
             }
             recordIo(recorder, commandContext);
-            // clear
+            // 记录完成之后清除附件
             invocation.removeAttachment();
         }
 
+        // 记录api 终节点 目的地,也就是redis服务名称 服务类型 异常
         recorder.recordApi(getMethodDescriptor());
         recorder.recordEndPoint(endPoint != null ? endPoint : "Unknown");
         recorder.recordDestinationId(RedisConstants.REDIS.getName());
@@ -81,6 +91,11 @@ public class JedisMethodInterceptor extends SpanEventSimpleAroundInterceptorForP
         recorder.recordException(throwable);
     }
 
+    /**
+     * 计算redis io过程时间 并记录属性 io操作的时间
+     * @param recorder
+     * @param callContext
+     */
     private void recordIo(SpanEventRecorder recorder, CommandContext callContext) {
         if (io) {
             IntBooleanIntBooleanValue value = new IntBooleanIntBooleanValue((int) callContext.getWriteElapsedTime(), callContext.isWriteFail(), (int) callContext.getReadElapsedTime(), callContext.isReadFail());

@@ -90,6 +90,11 @@ public class StandardHostValveInvokeInterceptor implements AroundInterceptor {
         traceContext.cacheApi(SERVLET_SYNCHRONOUS_API_TAG);
     }
 
+    /**
+     * 由tomcat服务器请求进入 target和args参数最上层由Interceptor定义(其实是由AnnotatedInterceptorFactory来分发)
+     * @param target
+     * @param args
+     */
     @Override
     public void before(Object target, Object[] args) {
         if (isDebug) {
@@ -165,9 +170,16 @@ public class StandardHostValveInvokeInterceptor implements AroundInterceptor {
         }
     }
 
+    /**
+     * 创建Trace方法
+     * @param target
+     * @param args
+     * @return trace
+     */
     private Trace createTrace(Object target, Object[] args) {
         final HttpServletRequest request = (HttpServletRequest) args[0];
 
+        // tomcat中调用的方法并不属于异步方法?
         if (isAsynchronousProcess(request)) {
             // servlet 3.0
             final Trace trace = getTraceMetadata(request);
@@ -185,6 +197,7 @@ public class StandardHostValveInvokeInterceptor implements AroundInterceptor {
             }
         }
 
+        // 是否过滤的URI
         final String requestURI = request.getRequestURI();
         if (excludeUrlFilter.filter(requestURI)) {
             if (isTrace) {
@@ -260,6 +273,11 @@ public class StandardHostValveInvokeInterceptor implements AroundInterceptor {
         }
     }
 
+    /**
+     * 获取异步元数据
+     * @param request
+     * @return
+     */
     private boolean getAsyncMetadata(final HttpServletRequest request) {
         if (!(request instanceof AsyncAccessor)) {
             return false;

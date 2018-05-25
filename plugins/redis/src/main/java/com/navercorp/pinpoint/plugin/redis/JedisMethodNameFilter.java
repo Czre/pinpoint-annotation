@@ -32,9 +32,9 @@ public class JedisMethodNameFilter implements MethodFilter {
     private final Set<String> excludeMethodNames = new HashSet<String>(16);
 
     public JedisMethodNameFilter() {
-        // object methods.
+        // 类的默认方法
         this.excludeMethodNames.addAll(Arrays.asList("clone", "equals", "finalize", "getClass", "hashCode", "notify", "notifyAll", "toString", "wait"));
-        // unnecessary methods.
+        // 不需要拦截的方法
         this.excludeMethodNames.addAll(Arrays.asList("ping", "close", "disconnect", "resetState", "getClient", "setClient", "getDB", "isInMulti", "isInWatch", "clear", "pipelined", "setPassword", "setDb", "setDataSource", "getClusterNodes", "getConnectionFromSlot"));
     }
 
@@ -49,6 +49,7 @@ public class JedisMethodNameFilter implements MethodFilter {
 
             final String name = method.getName();
             // skip pinpoint and object methods.
+            // 跳过pinpoint开头的方法和对象方法
             if (!name.startsWith("_$PINPOINT$_") && !this.excludeMethodNames.contains(name)) {
                 return true;
             }

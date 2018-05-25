@@ -39,6 +39,7 @@ import static com.navercorp.pinpoint.common.util.VarArgs.va;
  */
 public class RedisPlugin implements ProfilerPlugin, TransformTemplateAware {
     private final PLogger logger = PLoggerFactory.getLogger(this.getClass());
+    // 过滤掉的方法set
     private final JedisMethodNameFilter methodNameFilter = new JedisMethodNameFilter();
     private TransformTemplate transformTemplate;
 
@@ -67,6 +68,11 @@ public class RedisPlugin implements ProfilerPlugin, TransformTemplateAware {
     }
 
     // Jedis & BinaryJedis
+
+    /**
+     * 这一步是将redis客户端的构造方法添加设置终节点拦截器(addEndPointInterceptor)方法
+     * @param config
+     */
     private void addJedis(RedisPluginConfig config) {
         addBinaryJedisExtends(config, "redis.clients.jedis.BinaryJedis", new TransformHandler() {
 
@@ -165,6 +171,11 @@ public class RedisPlugin implements ProfilerPlugin, TransformTemplateAware {
         }
     }
 
+    /**
+     * 在Protocol中添加字节码
+     * Redis Server通信的协议规则都是在这个Protocol类中实现的
+     * 而这个方法主要定义去拦截sendCommand和read方法,方法是private的
+     */
     private void addProtocol() {
         transformTemplate.transform("redis.clients.jedis.Protocol", new TransformCallback() {
 
@@ -180,6 +191,10 @@ public class RedisPlugin implements ProfilerPlugin, TransformTemplateAware {
         });
     }
 
+    /**
+     * Pipeline是redis的消息管道服务,可以将多条命令放入一个管道中一次执行并返回结果
+     * @param config
+     */
     // Pipeline
     private void addPipeline(RedisPluginConfig config) {
         addPipelineBaseExtends(config, "redis.clients.jedis.PipelineBase", null);
@@ -225,6 +240,12 @@ public class RedisPlugin implements ProfilerPlugin, TransformTemplateAware {
         });
     }
 
+    /**
+     *
+     * @param target
+     * @param config
+     * @param scope
+     */
     private void addJedisMethodInterceptor(final InstrumentClass target, final RedisPluginConfig config, final String scope) {
         for (InstrumentMethod method : target.getDeclaredMethods(MethodFilters.chain(this.methodNameFilter, MethodFilters.modifierNot(MethodFilters.SYNTHETIC)))) {
             try {

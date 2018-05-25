@@ -51,11 +51,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.SocketUtils;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Random;
+import java.net.UnknownHostException;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -68,11 +67,9 @@ import static org.junit.Assert.assertTrue;
 
 public class AgentInfoSenderTest {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
     public static final int PORT = SocketUtils.findAvailableTcpPort(50050);
     public static final String HOST = "127.0.0.1";
-
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final int testAwaitTimeMs = 50;
 
     private final TestAwaitUtils awaitUtils = new TestAwaitUtils(this.testAwaitTimeMs, 60000);
@@ -96,13 +93,18 @@ public class AgentInfoSenderTest {
         final AtomicInteger successCount = new AtomicInteger();
         final long agentInfoSendRetryIntervalMs = 100L;
 
+        // 响应服务器消息监听器
         ResponseServerMessageListener serverListener = new ResponseServerMessageListener(requestCount, successCount);
 
+        // pinpoint服务接收类
         PinpointServerAcceptor serverAcceptor = createServerAcceptor(serverListener);
 
+        // 创建pinpoint客户端工厂
         PinpointClientFactory clientFactory = createPinpointClientFactory();
 
+        // InetSocketAddress 涉及网络编程
         InetSocketAddress address = new InetSocketAddress(HOST, PORT);
+        // 创建TCP数据发送者
         TcpDataSender dataSender = new TcpDataSender(address, clientFactory);
         AgentInfoSender agentInfoSender = new AgentInfoSender.Builder(dataSender, agentInfoFactory).sendInterval(agentInfoSendRetryIntervalMs).build();
 
@@ -177,7 +179,7 @@ public class AgentInfoSenderTest {
         assertEquals(expectedTriesUntilSuccess, requestCount.get());
         assertEquals(1, successCount.get());
     }
-    
+
     @Test
     public void agentInfoShouldRetryUntilAttemptsAreExhaustedWhenRefreshing() throws InterruptedException {
         final AtomicInteger successServerRequestCount = new AtomicInteger();
@@ -463,6 +465,13 @@ public class AgentInfoSenderTest {
         assertEquals(expectedTriesUntilSuccess, requestCount.get());
     }
 
+    /**
+     * 通过响应服务器消息监听器来创建一个Pinpoint服务接收器
+     * 然后bind host和port
+     *
+     * @param listener 响应服务器消息监听器
+     * @return
+     */
     private PinpointServerAcceptor createServerAcceptor(ServerMessageListener listener) {
         PinpointServerAcceptor serverAcceptor = new PinpointServerAcceptor();
         // server.setMessageListener(new
@@ -503,6 +512,25 @@ public class AgentInfoSenderTest {
         AgentInformation agentInfo = new DefaultAgentInformation("agentId", "appName", System.currentTimeMillis(), 1111, "hostname", "127.0.0.1", ServiceType.USER,
                 JvmUtils.getSystemProperty(SystemPropertyKey.JAVA_VERSION), Version.VERSION);
         return agentInfo;
+    }
+
+    private PinpointClientFactory createPinpointClientFactory() {
+        PinpointClientFactory clientFactory = new DefaultPinpointClientFactory();
+        clientFactory.setTimeoutMillis(1000 * 5);
+        clientFactory.setProperties(Collections.<String, Object>emptyMap());
+
+        return clientFactory;
+    }
+
+    private void waitExpectedRequestCount(final AtomicInteger requestCount, final int expectedRequestCount) {
+        boolean pass = awaitUtils.await(new TestAwaitTaskUtils() {
+            @Override
+            public boolean checkCompleted() {
+                return requestCount.get() == expectedRequestCount;
+            }
+        });
+
+        Assert.assertTrue(pass);
     }
 
     class ResponseServerMessageListener implements ServerMessageListener {
@@ -560,24 +588,5 @@ public class AgentInfoSenderTest {
             logger.debug("ping received packet:{}, remote:{}", pingPacket, pinpointServer);
         }
 
-    }
-
-    private PinpointClientFactory createPinpointClientFactory() {
-        PinpointClientFactory clientFactory = new DefaultPinpointClientFactory();
-        clientFactory.setTimeoutMillis(1000 * 5);
-        clientFactory.setProperties(Collections.<String, Object> emptyMap());
-
-        return clientFactory;
-    }
-
-    private void waitExpectedRequestCount(final AtomicInteger requestCount, final int expectedRequestCount) {
-        boolean pass = awaitUtils.await(new TestAwaitTaskUtils() {
-            @Override
-            public boolean checkCompleted() {
-                return requestCount.get() == expectedRequestCount;
-            }
-        });
-
-        Assert.assertTrue(pass);
     }
 }

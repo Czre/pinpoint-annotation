@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
+ * 排除路径过滤器
  * @author emeroad
  * @author HyunGil Jeong
  */

@@ -21,7 +21,9 @@ package com.navercorp.pinpoint.bootstrap.plugin;
  * Pinpoint profiler plugin should implement this interface.
  * 
  * When Pinpoint agent initialize, plugins are loaded by the agent, and then their {@link #setup(ProfilerPluginSetupContext)} methods are invoked.
- * 
+ *
+ * Pinpoint探查器插件应该实现这个接口。
+ * 当Pinpoint代理初始化时，插件由代理加载，然后调用他们的 {@link #setup(ProfilerPluginSetupContext)} 方法
  * @author Jongho Moon
  *
  */

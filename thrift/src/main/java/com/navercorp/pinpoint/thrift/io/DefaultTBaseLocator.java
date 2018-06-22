@@ -31,6 +31,7 @@ import com.navercorp.pinpoint.thrift.dto.TSqlMetaData;
 import com.navercorp.pinpoint.thrift.dto.TStringMetaData;
 
 /**
+ * 默认TBase定位器 将thrift数据进行定位 暂时的了解 新增stat数据格式的时候没有问题 因为新增的stat数据格式包含在TAgentStat数据里面 所以没有问题
  * @author emeroad
  * @author koo.taejin
  * @author netspider

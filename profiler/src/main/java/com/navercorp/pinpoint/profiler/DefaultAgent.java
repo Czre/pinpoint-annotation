@@ -74,7 +74,6 @@ public class DefaultAgent implements Agent {
     }
 
     public DefaultAgent(AgentOption agentOption, final InterceptorRegistryBinder interceptorRegistryBinder) {
-        System.out.println(agentOption);
         if (agentOption == null) {
             throw new NullPointerException("agentOption must not be null");
         }

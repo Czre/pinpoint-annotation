@@ -1,166 +1,41 @@
-![Pinpoint](web/src/main/webapp/images/logo.png)
+##1.概述
 
-[![Build Status](https://travis-ci.org/naver/pinpoint.svg?branch=master)](https://travis-ci.org/naver/pinpoint)
-[![codecov](https://codecov.io/gh/naver/pinpoint/branch/master/graph/badge.svg)](https://codecov.io/gh/naver/pinpoint)
+必要项：
 
-**Pinpoint** is an APM (Application Performance Management) tool for large-scale distributed systems written in Java. Modelled after [Dapper](http://research.google.com/pubs/pub36356.html "Google Dapper"), Pinpoint provides a solution to help analyze the overall structure of the system and how components within them are interconnected by tracing transactions across distributed applications.
+ - 通过支持的plugin 从代码层级发现问题，耗时慢或错误等问题，另外还收集了部署agent的服务器性能数据
 
-* Install agents without changing a single line of code
-* Minimal impact on performance (approximately 3% increase in resource usage)
+ - Application Project Manajer？
 
-## Latest Release (2018/01/04)
-We're happy to announce the release of Pinpoint v1.7.1.
-Please check the release note at (https://github.com/naver/pinpoint/releases/tag/1.7.1).
+ - 运维人员？Java开发人员？
+    - 方便需要的人员定位问题，然后解决问题
+    - 通过部署agent，由agent收集服务器相关数据，发送至collector层（自己启动的服务），接收数据落库，然后由web层查询数据库数据，并处理，返回给前端。
+    - 主要通过JDK1.6的Instrumentation机制，加载核心jar包(insight-bootstrap.jar)与字节码增强技术(javassist)，当进入到支持的plugin时，在支持代码或方法执行之前与之后添加需要获取的参数，记录下来使用thrift压缩并通过Netty通信框架发送数据给指定IP(部署并运行了自身的collector层)
+ 
+##2.概要设计：
 
-The current stable version is [**v1.7.1**](https://github.com/naver/pinpoint/releases/tag/1.7.1).
+- 功能模块说明
+    - agent 负责类的加载与字节码植入，并创建netty通信框架，使用thrift来作为传输的数据
+    - collector 负责接收agent发送的数据，并将数据存入数据库中
+    - web 负责从数据库拿出数据，在页面展示数据
 
-### Plugin Development Guide (2016/03/18)
-We now have a [plugin development guide](https://github.com/naver/pinpoint/wiki/Pinpoint-Plugin-Developer-Guide "Pinpoint Plugin Development Guide"). Yay!
-
-## Overview
-Services nowadays often consist of many different components, communicating amongst themselves as well as making API calls to external services. How each and every transaction gets executed is often left as a blackbox. Pinpoint traces transaction flows between these components and provides a clear view to identify problem areas and potential bottlenecks.<br/>
-For a more intimate guide, please check out our *[Introduction to Pinpoint](https://github.com/naver/pinpoint/wiki#video-clips)* video clip.
-
-* **ServerMap** - Understand the topology of any distributed systems by visualizing how their components are interconnected. Clicking on a node reveals details about the component, such as its current status, and transaction count.
-* **Realtime Active Thread Chart** - Monitor active threads inside applications in real-time.
-* **Request/Response Scatter Chart** - Visualize request count and response patterns over time to identify potential problems. Transactions can be selected for additional detail by **dragging over the chart**.
-
-  ![Server Map](doc/img/ss_server-map.png)
-
-* **CallStack** - Gain code-level visibility to every transaction in a distributed environment, identifying bottlenecks and points of failure in a single view.
-
-  ![Call Stack](doc/img/ss_call-stack.png)
-
-* **Inspector** - View additional details on the application such as CPU usage, Memory/Garbage Collection, TPS, and JVM arguments.
-
-  ![Inspector](doc/img/ss_inspector.png)
-
-## Architecture
-![Pinpoint Architecture](doc/img/pinpoint-architecture.png)
-
-## Supported Modules
-* JDK 6+
-* Tomcat 6/7/8, [Jetty 8/9](https://github.com/naver/pinpoint/tree/master/plugins/jetty), [JBoss EAP 6](https://github.com/naver/pinpoint/tree/master/plugins/jboss), [Resin 4](https://github.com/naver/pinpoint/tree/master/plugins/resin), [Websphere 6/7/8](https://github.com/naver/pinpoint/tree/master/plugins/websphere)
-* Spring, Spring Boot (Embedded Tomcat, Jetty)
-* Apache HTTP Client 3.x/4.x, JDK HttpConnector, GoogleHttpClient, OkHttpClient, NingAsyncHttpClient
-* Thrift Client, Thrift Service, DUBBO PROVIDER, DUBBO CONSUMER
-* MySQL, Oracle, MSSQL, CUBRID,POSTGRESQL, MARIA
-* Arcus, Memcached, Redis, CASSANDRA
-* iBATIS, MyBatis
-* DBCP, DBCP2, HIKARICP
-* gson, Jackson, Json Lib
-* log4j, Logback
-
-## Third Party Agents/Plugins
-There may be agents, and plugins that are being developed and managed by other individuals/organizations. Please take a look [here](https://github.com/naver/pinpoint/wiki#third-party-agentsplugins) for the list and see if you would like to help out in their development.
-
-## Quick Start
-You may run a sample Pinpoint instance in your own machine by running four simple scripts for each components: Collector, Web, Sample TestApp, HBase.
-
-Once the components are running, you should be able to visit http://localhost:28080 to view the Pinpoint Web UI, and http://localhost:28081 to generate transactions on the Sample TestApp.
-
-For details, please refer to the [quick-start guide](quickstart/README.md).
-
-## Installation
-**Build Requirements**
-
-* JDK 6 installed ([jdk1.6.0_45](http://www.oracle.com/technetwork/java/javase/downloads/java-archive-downloads-javase6-419409.html#jdk-6u45-oth-JPR) recommended)
-* JDK 7 installed ([jdk1.7.0_80](http://www.oracle.com/technetwork/java/javase/downloads/java-archive-downloads-javase7-521261.html#jdk-7u80-oth-JPR) recommended)
-* JDK 8 installed
-* JAVA_6_HOME environment variable set to JDK 6 home directory.
-* JAVA_7_HOME environment variable set to JDK 7 home directory.
-* JAVA_8_HOME environment variable set to JDK 8 home directory.
-
-**Prerequisites**
-
-Java version required to run Pinpoint:
-
-Pinpoint Version | Agent | Collector | Web
----------------- | ----- | --------- | ---
-1.0.x | 6-8 | 6+ | 6+
-1.1.x | 6-8 | 7+ | 7+
-1.5.x | 6-8 | 7+ | 7+
-1.6.x | 6-8 | 7+ | 7+
-1.7.x | 6-8 | 8+ | 8+
-
-HBase compatibility table:
-
-Pinpoint Version | HBase 0.94.x | HBase 0.98.x | HBase 1.0.x | HBase 1.1.x | HBase 1.2.x
----------------- | ------------ | ------------ | ----------- | ----------- | -----------
-1.0.x | yes | no | no | no | no
-1.1.x | no | not tested | yes | not tested | not tested
-1.5.x | no | not tested | yes | not tested | not tested
-1.6.x | no | not tested | not tested | not tested | yes
-1.7.x | no | not tested | not tested | not tested | yes
-
-Agent compatibility table:
-
-Agent Version | Collector 1.0.x | Collector 1.1.x | Collector 1.5.x | Collector 1.6.x | Collector 1.7.x
-------------- | --------------- | --------------- | --------------- | --------------- | ---------------
-1.0.x | yes | yes | yes | yes | yes
-1.1.x | not tested | yes | yes | yes | yes
-1.5.x | no | no | yes | yes | yes
-1.6.x | no | no | not tested | yes | yes
-1.7.x | no | no | no | no | yes
-
-Pinpoint Web Supported Browsers:
-
-* Chrome
-
-**Installation**
-
-To set up your very own Pinpoint instance you can either **download the build results** from our [**latest release**](https://github.com/naver/pinpoint/releases/latest), or manually build from your Git clone.
-Take a look at our [installation guide](doc/installation.md) for further instructions.
-
-## Issues
-For feature requests and bug reports, feel free to post them [here](https://github.com/naver/pinpoint/issues "Pinpoint Issues").  
-Please take a look at [CONTRIBUTING.md#issues](CONTRIBUTING.md#issues) for some guidelines that'll help us understand your issues better.
-
-
-## User Group
-For Q/A and discussion [here](https://groups.google.com/forum/#!forum/pinpoint_user "Pinpoint Google Group").
-
-
-## Wiki
-We have a [wiki](https://github.com/naver/pinpoint/wiki) page for roadmap, user guide, and some documentation.
-We welcome any documentation contribution.
-
-
-## Contribution
-We welcome any and all suggestions.
-
-For plugin development, take a look at our [plugin development guide](https://github.com/naver/pinpoint/wiki/Pinpoint-Plugin-Developer-Guide "Pinpoint Plugin Development Guide"), along with [plugin samples](https://github.com/naver/pinpoint-plugin-sample "Pinpoint Plugin Samples project") project to get an idea of how we do instrumentation. The samples will provide you with example codes to help you get started.  
-**Please follow our [guideline](https://github.com/naver/pinpoint/wiki/Pinpoint-Plugin-Developer-Guide#iii-plugin-contribution-guideline "Plugin PR Guideline") when making pull-requests for new plugins.**
-
-For all pull-requests, make sure you've read through [CONTRIBUTING.md#pull-requests](CONTRIBUTING.md#pull-requests) and note that you will have to complete a  [CLA](https://docs.google.com/forms/d/1oDX26pwmVZSoDfL9MwvwLsM23dHqc5pvgoZCp7jM940/viewform?c=0&w=1 "Contributor License Agreement") for your first pull-request.
-
-We would love to see additional tracing support for libraries such as [Storm](https://storm.apache.org "Apache Storm"), [HBase](http://hbase.apache.org "Apache HBase"), as well as profiler support for additional languages (.NET, C++).
-
-## Google Analytics
-The web module has google analytics attached that tracks the number and the order of button clicks in the server map, transaction list, and the inspector view.
-
-This data is used to better understand how users interact with the Web UI which gives us valuable information in improving Pinpoint Web's user experience.
-To disable this for any reason, set the following option to false in *pinpoint-web.properties* for your web instance.
-```
-config.sendUsage=false
-```
-
-## License
-Pinpoint is licensed under the Apache License, Version 2.0.
-See [LICENSE](LICENSE) for full license text.
-
-```
-Copyright 2017 NAVER Corp.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
+- 模块概要说明
+   - agent 主要使用maven来将annotations，commons，bootstrap，bootstrap-core，bootstrap-core-optional，plugins，tools等子项目的jar包引入进来
+   - annotations 字面意思是注解，具体做什么没去看
+   - bootstrap agent开始的地方，通过JDK6 instrumentation机制，在容器启动或者JVM启东时添加 -javaagent参数 引入bootstrap.jar包，加载通过编译输出的agent文件夹下面的相关jar包。主要入口为PinpointBootStrap.premain()方法
+   - bootstrap-core 加载启动的核心项目，具体做说明没去看
+   - bootstrap-core-optional JDK的类加载器？其中一个类重写来加载类的方式，这个项目下面只有三个类
+   - collector 主要功能是接收数据并落库。将接收到的Thrift类型的数据，通过map方式转换成Bo类，存入数据库
+   - commons 常用组件
+   - commons-server 服务组件项目
+   - doc 文档。没怎么去看过
+   - hbase 建表删表脚本
+   - plugins pinpoint的另一大核心，支持的一些插件包，web容器，中间件等等，配合bootstrap-core项目来转换一些方法，完成字节码植入的步骤，获取数据。
+   - profiler agent植入之后配合plugins获取到一些支持的插件执行之前和之后的方法的数据，在这里组合，并创建通信，构成RPC传输的数据，使用UDP和TCP协议向collector发送数据。(使用guice依赖注入，Netty通信，Thrift RPC工具)
+   - profiler-optional jdk获取cpu的补充项目，jdk6采用的手动计算方式来获取cpu资源，jdk7及以上是通过ManagementFactory来获取一些数据(PS：ManagementFactory可以获取很多的数据但是只有1.7及以上才支持)
+   - profiler-test profiler的测试类
+   - rpc 通信传输相关的项目 具体做什么没去看
+   - test 整个项目的测试
+   - thrift rpc工具定义类一些thrift的文件和支持thrift的java类，正常操作定义好thrift相关文件，使用thrift/build-thrift-*.*文件编译或者使用带有thrift的环境编译出java的文件即可
+   - tools 用来测试是否ping的通collector层的端口
+   - web 读取数据展示
+   

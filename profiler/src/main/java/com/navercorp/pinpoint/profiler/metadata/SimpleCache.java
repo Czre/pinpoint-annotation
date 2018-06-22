@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class SimpleCache<T> {
     // zero means not exist.
+    // 0意味着不存在
     private final AtomicInteger idGen;
     private final ConcurrentMap<T, Result> cache;
 
@@ -62,6 +63,7 @@ public class SimpleCache<T> {
         }
         
         // Use negative values too to reduce data size
+        // 也使用负值来减少数据大小
         final int newId = BytesUtils.zigzagToInt(idGen.getAndIncrement());
         final Result result = new Result(false, newId);
         final Result before = this.cache.putIfAbsent(value, result);

@@ -113,7 +113,7 @@ class PinpointStarter {
         savePinpointVersion();
 
         try {
-            // Is it right to load the configuration in the bootstrap?
+            // Is it right to load the configurat1ion in the bootstrap?
             // 这个方法加载pinpoint.config配置文件
             ProfilerConfig profilerConfig = DefaultProfilerConfig.load(configPath);
 

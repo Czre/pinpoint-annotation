@@ -74,15 +74,12 @@ public class SetEndPointInterceptor implements AroundInterceptor {
         // 拿到终节点信息,大意就是ip和端口咯
         final Object argZero = args[0];
         if (argZero instanceof String) {
-            System.out.println(1);
             return EndPointUtils.getEndPoint(args);
         } else if (argZero instanceof URI) {
             final URI uri = (URI) argZero;
-            System.out.println(2);
             return HostAndPort.toHostAndPortString(uri.getHost(), uri.getPort());
         } else if (argZero instanceof JedisShardInfo) {
             final JedisShardInfo info = (JedisShardInfo) argZero;
-            System.out.println(3);
             return HostAndPort.toHostAndPortString(info.getHost(), info.getPort());
         }
         return "Unknown";

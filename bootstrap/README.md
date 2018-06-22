@@ -1,1 +1,2 @@
-# pinpoint-bootstrap
+## bootstrap
+agent入口方法在PinpointBootStrap.premain()方法,该方法加载了打包好的agent包下的所有jar包,并读取pinpoint.config文件,验证Id和applicationName合法性
